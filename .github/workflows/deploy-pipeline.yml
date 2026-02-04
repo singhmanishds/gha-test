@@ -5,21 +5,27 @@ on:
     workflows: ["Build Pipeline"]
     types:
       - completed
-    branches:
-      - main
+
+permissions:
+  actions: read
+  contents: read
 
 jobs:
   deploy:
+    # Only run if Build Pipeline succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download artifact from Build Pipeline
+      - name: Download artifact from Build Pipeline run
         uses: actions/download-artifact@v4
         with:
           name: build-info
           run-id: ${{ github.event.workflow_run.id }}
-          path: ./
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: .
 
-      - name: Display build-info.txt content
+      - name: Verify artifact
         run: |
+          echo "Artifact content:"
           cat build-info.txt
